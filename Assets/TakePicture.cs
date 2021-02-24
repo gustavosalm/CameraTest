@@ -33,8 +33,9 @@ public class TakePicture : MonoBehaviour
         photo.SetPixels(webCamTexture.GetPixels());
         photo.Apply();
 
-        Color[] color = photo.GetPixels((photo.width - 400) / 2, 0, 400, photo.height, 0);
-        Texture2D newTex = new Texture2D(400, webCamTexture.height);
+        //photo.GetPixels((photo.width - cropSize) / 2, 0, cropSize, photo.height, 0);
+        Color[] color = photo.GetPixels((photo.width - photo.height) / 2, 0, photo.height, photo.height, 0);
+        Texture2D newTex = new Texture2D(photo.height, photo.height);
         newTex.SetPixels(color, 1);
         newTex.Apply();
 
