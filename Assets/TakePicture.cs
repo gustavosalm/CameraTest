@@ -12,6 +12,7 @@ public class TakePicture : MonoBehaviour
     void Start()
     {
         webCamTexture = new WebCamTexture();
+        webCamTexture.deviceName = WebCamTexture.devices[1].name;
         webCamTexture.Play();
         GetComponent<RawImage>().texture = webCamTexture;
         this.GetComponent<RectTransform>().sizeDelta = new Vector2(webCamTexture.width, webCamTexture.height);
@@ -22,6 +23,11 @@ public class TakePicture : MonoBehaviour
         print(Screen.height + "  " + webCamTexture.height);
         print(Screen.width + "  " + webCamTexture.width);
     }
+
+    void Update(){
+        GetComponent<RawImage>().texture = webCamTexture;
+    }
+
     public void StartTakingPicture(){
         StartCoroutine("TakeAPicture");
     }
@@ -29,26 +35,29 @@ public class TakePicture : MonoBehaviour
     public IEnumerator TakeAPicture(){
         yield return new WaitForEndOfFrame();
 
-        Texture2D photo = new Texture2D(webCamTexture.width, webCamTexture.height);
-        photo.SetPixels(webCamTexture.GetPixels());
-        photo.Apply();
+        Texture2D photo = new Texture2D(1, 1);
+        if(webCamTexture.height < webCamTexture.width){
+            photo = new Texture2D(webCamTexture.height, webCamTexture.height);
+            photo.SetPixels(webCamTexture.GetPixels((webCamTexture.width - webCamTexture.height) / 2, 0, webCamTexture.height, webCamTexture.height));
+            photo.Apply();
+        }
+        else{
+            photo = new Texture2D(webCamTexture.width, webCamTexture.width);
+            photo.SetPixels(webCamTexture.GetPixels(0, (webCamTexture.height - webCamTexture.width) / 2, webCamTexture.width, webCamTexture.width));
+            photo.Apply();
+        }
 
         //photo.GetPixels((photo.width - cropSize) / 2, 0, cropSize, photo.height, 0);
-        Color[] color = photo.GetPixels((photo.width - photo.height) / 2, 0, photo.height, photo.height, 0);
-        Texture2D newTex = new Texture2D(photo.height, photo.height);
-        newTex.SetPixels(color, 1);
-        newTex.Apply();
-
         //oImg.GetPixels((oImg.width - cropSize) / 2, (oImg.height - cropSize) / 2, cropSize, cropSize, 0);
 
         //Encode to a PNG
-        byte[] bytes = newTex.EncodeToPNG();
+        byte[] bytes = photo.EncodeToPNG();
         //Write out the PNG. Of course you have to substitute your_path for something sensible
-        File.WriteAllBytes(@"photo.png", bytes);
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
+        GameObject.Find("path").GetComponent<Text>().text = Application.persistentDataPath;
+        print(Application.persistentDataPath);
+        NativeGallery.SaveImageToGallery(photo, "GalleryTest", "photo" + System.DateTime.Now.ToString("h:mm:ss tt") + ".png");
+        //File.WriteAllBytes($"{Application.persistentDataPath}/photo.png", bytes);
+        //yield return new WaitForSeconds(4);
+        //GameObject.Find("path").GetComponent<Text>().text = (File.Exists($"{Application.persistentDataPath}/photo.png")) ? "existe" : "nope";
     }
 }
